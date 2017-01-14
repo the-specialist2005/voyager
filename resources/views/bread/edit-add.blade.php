@@ -6,7 +6,7 @@
 
 @section('page_header')
     <h1 class="page-title">
-        <i class="{{ $dataType->icon }}"></i> @if(isset($dataTypeContent->id)){{ 'Edit' }}@else{{ 'New' }}@endif {{ $dataType->display_name_singular }}
+        <i class="{{ $dataType->icon }}"></i> @if(isset($dataTypeContent) && isset($dataTypeContent->id)){{ 'Edit' }}@else{{ 'New' }}@endif {{ $dataType->display_name_singular }}
     </h1>
 @stop
 
@@ -18,15 +18,15 @@
                 <div class="panel panel-bordered">
 
                     <div class="panel-heading">
-                        <h3 class="panel-title">@if(isset($dataTypeContent->id)){{ 'Edit' }}@else{{ 'Add New' }}@endif {{ $dataType->display_name_singular }}</h3>
+                        <h3 class="panel-title">@if(isset($dataTypeContent) && isset($dataTypeContent->id)){{ 'Edit' }}@else{{ 'Add New' }}@endif {{ $dataType->display_name_singular }}</h3>
                     </div>
                     <!-- /.box-header -->
                     <!-- form start -->
                     <form role="form"
-                          action="@if(isset($dataTypeContent->id)){{ route('voyager.'.$dataType->slug.'.update', $dataTypeContent->id) }}@else{{ route('voyager.'.$dataType->slug.'.store') }}@endif"
+                          action="@if(isset($dataTypeContent) && isset($dataTypeContent->id)){{ route('voyager.'.$dataType->slug.'.update', $dataTypeContent->id) }}@else{{ route('voyager.'.$dataType->slug.'.store') }}@endif"
                           method="POST" enctype="multipart/form-data">
                         <!-- PUT Method if we are editing -->
-                        @if(isset($dataTypeContent->id))
+                        @if(isset($dataTypeContent) && isset($dataTypeContent->id))
                             {{ method_field("PUT") }}
                         @endif
 
@@ -46,7 +46,7 @@
                             @endif
 
                             <!-- If we are editing -->
-                            @if(isset($dataTypeContent->id))
+                            @if(isset($dataTypeContent) && isset($dataTypeContent->id))
                                 <?php $dataTypeRows = $dataType->editRows; ?>
                             @else
                                 <?php $dataTypeRows = $dataType->addRows; ?>
@@ -60,9 +60,9 @@
                                         <?php $options = json_decode($row->details); ?>
                                         <input type="text" class="form-control" name="{{ $row->field }}"
                                                placeholder="{{ $row->display_name }}"
-                                               value="@if(isset($dataTypeContent->{$row->field})){{ old($row->field, $dataTypeContent->{$row->field}) }}@elseif(isset($options->default)){{ old($row->field, $options->default) }}@else{{ old($row->field) }}@endif">
+                                               value="@if(isset($dataTypeContent) && isset($dataTypeContent->{$row->field})){{ old($row->field, $dataTypeContent->{$row->field}) }}@elseif(isset($options->default)){{ old($row->field, $options->default) }}@else{{ old($row->field) }}@endif">
                                     @elseif($row->type == "password")
-                                        @if(isset($dataTypeContent->{$row->field}))
+                                        @if(isset($dataTypeContent) && isset($dataTypeContent->{$row->field}))
                                             <br>
                                             <small>Leave empty to keep the same</small>
                                         @endif
@@ -70,15 +70,15 @@
                                     @elseif($row->type == "text_area")
                                         <?php $options = json_decode($row->details); ?>
                                         <textarea class="form-control"
-                                                  name="{{ $row->field }}">@if(isset($dataTypeContent->{$row->field})){{ old($row->field, $dataTypeContent->{$row->field}) }}@elseif(isset($options->default)){{ old($row->field, $options->default) }}@else{{ old($row->field) }}@endif</textarea>
+                                                  name="{{ $row->field }}">@if(isset($dataTypeContent) && isset($dataTypeContent->{$row->field})){{ old($row->field, $dataTypeContent->{$row->field}) }}@elseif(isset($options->default)){{ old($row->field, $options->default) }}@else{{ old($row->field) }}@endif</textarea>
                                     @elseif($row->type == "rich_text_box")
                                         <textarea class="form-control richTextBox"
-                                                  name="{{ $row->field }}">@if(isset($dataTypeContent->{$row->field})){{ old($row->field, $dataTypeContent->{$row->field}) }}@else{{old($row->field)}}@endif</textarea>
+                                                  name="{{ $row->field }}">@if(isset($dataTypeContent) && isset($dataTypeContent->{$row->field})){{ old($row->field, $dataTypeContent->{$row->field}) }}@else{{old($row->field)}}@endif</textarea>
                                     @elseif($row->type == "image" || $row->type == "file")
-                                        @if($row->type == "image" && isset($dataTypeContent->{$row->field}))
+                                        @if($row->type == "image" && isset($dataTypeContent) && isset($dataTypeContent->{$row->field}))
                                             <img src="{{ Voyager::image( $dataTypeContent->{$row->field} ) }}"
                                                  style="width:200px; height:auto; clear:both; display:block; padding:2px; border:1px solid #ddd; margin-bottom:10px;">
-                                        @elseif($row->type == "file" && isset($dataTypeContent->{$row->field}))
+                                        @elseif($row->type == "file" && isset($dataTypeContent) && isset($dataTypeContent->{$row->field}))
                                             <div class="fileType">{{ $dataTypeContent->{$row->field} }}</div>
                                         @endif
                                         <input type="file" name="{{ $row->field }}">
@@ -91,9 +91,9 @@
                                             @endif
 
                                             @if( method_exists( $dataType->model_name, $row->field ) )
-                                                <?php $selected_value = (isset($dataTypeContent->{$row->field}) && !is_null(old($row->field, $dataTypeContent->{$row->field}))) ? old($row->field, $dataTypeContent->{$row->field}) : old($row->field); ?>
+                                                <?php $selected_value = (isset($dataTypeContent) && isset($dataTypeContent->{$row->field}) && !is_null(old($row->field, $dataTypeContent->{$row->field}))) ? old($row->field, $dataTypeContent->{$row->field}) : old($row->field); ?>
                                                 <select class="form-control select2" name="{{ $row->field }}">
-                                                    <?php $default = (isset($options->default) && !isset($dataTypeContent->{$row->field})) ? $options->default : NULL; ?>
+                                                    <?php $default = (isset($options->default) && (!isset($dataTypeContent) || !isset($dataTypeContent->{$row->field}))) ? $options->default : NULL; ?>
                                                 
                                                     @if(isset($options->options))
                                                         <optgroup label="Custom">
@@ -115,9 +115,9 @@
                                                 <select class="form-control select2" name="{{ $row->field }}"></select>
                                             @endif
                                         @else
-                                            <?php $selected_value = (isset($dataTypeContent->{$row->field}) && !is_null(old($row->field, $dataTypeContent->{$row->field}))) ? old($row->field, $dataTypeContent->{$row->field}) : old($row->field); ?>
+                                            <?php $selected_value = (isset($dataTypeContent) && isset($dataTypeContent->{$row->field}) && !is_null(old($row->field, $dataTypeContent->{$row->field}))) ? old($row->field, $dataTypeContent->{$row->field}) : old($row->field); ?>
                                             <select class="form-control select2" name="{{ $row->field }}">
-                                                <?php $default = (isset($options->default) && !isset($dataTypeContent->{$row->field})) ? $options->default : NULL; ?>
+                                                <?php $default = (isset($options->default) && (!isset($dataTypeContent) || !isset($dataTypeContent->{$row->field}))) ? $options->default : NULL; ?>
                                                 @if(isset($options->options))
                                                     @foreach($options->options as $key => $option)
                                                         <option value="{{ $key }}" @if($default == $key && $selected_value === NULL){{ 'selected="selected"' }}@endif @if($selected_value == $key){{ 'selected="selected"' }}@endif>{{ $option }}</option>
@@ -137,7 +137,7 @@
                                             @if(isset($options->relationship))
                                                 <!-- Check that the method relationship exists -->
                                                 @if( method_exists( $dataType->model_name, $row->field ) )
-                                                    <?php $selected_values = isset($dataTypeContent) ? $dataTypeContent->{$row->field}()->pluck($options->relationship->key)->all() : array(); ?>
+                                                    <?php $selected_values = isset($dataTypeContent) && isset($dataTypeContent) ? $dataTypeContent->{$row->field}()->pluck($options->relationship->key)->all() : array(); ?>
                                                     <?php $relationshipClass = get_class(app($dataType->model_name)->{$row->field}()->getRelated()); ?>
                                                     <?php $relationshipOptions = $relationshipClass::all(); ?>
                                                     @foreach($relationshipOptions as $relationshipOption)
@@ -149,10 +149,10 @@
 
                                     @elseif($row->type == "radio_btn")
                                         <?php $options = json_decode($row->details); ?>
-                                        <?php $selected_value = (isset($dataTypeContent->{$row->field}) && !empty(old($row->field,
+                                        <?php $selected_value = (isset($dataTypeContent) && isset($dataTypeContent->{$row->field}) && !empty(old($row->field,
                                                         $dataTypeContent->{$row->field}))) ? old($row->field,
                                                 $dataTypeContent->{$row->field}) : old($row->field); ?>
-                                        <?php $default = (isset($options->default) && !isset($dataTypeContent->{$row->field})) ? $options->default : NULL; ?>
+                                        <?php $default = (isset($options->default) && (!isset($dataTypeContent) || !isset($dataTypeContent->{$row->field}))) ? $options->default : NULL; ?>
                                         <ul class="radio">
                                             @if(isset($options->options))
                                                 @foreach($options->options as $key => $option)
@@ -171,7 +171,7 @@
 
                                         <br>
                                         <?php $options = json_decode($row->details); ?>
-                                        <?php $checked = (isset($dataTypeContent->{$row->field}) && old($row->field,
+                                        <?php $checked = (isset($dataTypeContent) && isset($dataTypeContent->{$row->field}) && old($row->field,
                                                         $dataTypeContent->{$row->field}) == 1) ? true : old($row->field); ?>
                                         @if(isset($options->on) && isset($options->off))
                                             <input type="checkbox" name="{{ $row->field }}" class="toggleswitch"
@@ -189,12 +189,12 @@
                                     @elseif($row->type == "date")
                                         <input type="date" class="form-control" name="{{ $row->field }}"
                                                placeholder="{{ $row->display_name }}"
-                                               value="@if(isset($dataTypeContent->{$row->field})){{ old($row->field, $dataTypeContent->{$row->field}) }}@else{{old($row->field)}}@endif">
+                                               value="@if(isset($dataTypeContent) && isset($dataTypeContent->{$row->field})){{ old($row->field, $dataTypeContent->{$row->field}) }}@else{{old($row->field)}}@endif">
 
                                     @elseif($row->type == "number")
                                         <input type="number" class="form-control" name="{{ $row->field }}"
                                                placeholder="{{ $row->display_name }}"
-                                               value="@if(isset($dataTypeContent->{$row->field})){{ old($row->field, $dataTypeContent->{$row->field}) }}@else{{old($row->field)}}@endif">
+                                               value="@if(isset($dataTypeContent) && isset($dataTypeContent->{$row->field})){{ old($row->field, $dataTypeContent->{$row->field}) }}@else{{old($row->field)}}@endif">
 
                                     @endif
 
